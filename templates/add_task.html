@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Task</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Add a New Task</h2>
+    <form method="POST" action="/add_task">
+        <label for="title">Title:</label><br>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="description">Description:</label><br>
+        <textarea id="description" name="description" rows="4" cols="30"></textarea><br><br>
+
+        <label>
+            <input type="checkbox" name="priority">
+            Mark as high priority 🚩
+        </label><br><br>
+
+        <button type="submit">Add Task</button>
+
+    </form>
+    <br>
+    <a href="/tasks">Back to Tasks</a>
+</body>
+</html>

@@ -1,8 +1,10 @@
 # --- Import required libraries ---
-from flask import Flask, request, jsonify, render_template, session
+from flask import Flask, request, jsonify, render_template, session, redirect
 import os
+from bson.objectid import ObjectId
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # --- Load environment variables from .env file ---
@@ -85,6 +87,31 @@ def login():
 def show_register_form():
     return render_template('register_form.html')
 
+# --- Route for handling registration form submission ---
+@app.route('/register_form', methods=['POST'])
+def process_register_form():
+    username = request.form.get('username')
+    password = request.form.get('password')
+
+    if not username or not password:
+        return "Missing fields", 400
+
+    users_collection = db['users']
+    existing_user = users_collection.find_one({'username': username})
+    if existing_user:
+        return "Username already exists", 409
+
+    hashed_password = generate_password_hash(password)
+    users_collection.insert_one({
+        'username': username,
+        'password': hashed_password
+    })
+
+    return """
+        <h3>🎉 User registered successfully!</h3>
+        <p><a href='/login_form'>Click here to login</a></p>
+    """, 201
+
 # --- Route for showing the login form (HTML) ---
 @app.route('/login_form', methods=['GET'])
 def show_login_form():
@@ -110,7 +137,7 @@ def process_login_form():
 
     # Save the logged-in user in the session
     session['username'] = username
-    return f"Welcome, {username}!<br><a href='/logout'>Log out</a>"
+    return redirect('/tasks')
 
 # --- Route for logging out the user ---
 @app.route('/logout')
@@ -118,30 +145,142 @@ def logout():
     session.pop('username', None)
     return "Logged out!<br><a href='/login_form'>Login again</a>"
 
-# --- Route for handling registration form submission ---
-@app.route('/register_form', methods=['POST'])
-def process_register_form():
-    username = request.form.get('username')
-    password = request.form.get('password')
+@app.route('/tasks', methods=['GET'])
+def show_tasks():
+    # Check if user is logged in
+    if 'username' not in session:
+        return "You must be logged in to view your tasks.<br><a href='/login_form'>Login</a>", 401
 
-    # Check for missing fields
-    if not username or not password:
-        return "Missing fields", 400
+    username = session['username']
+    tasks_collection = db['tasks']
+    
+    # Fetch only tasks that belong to the current user
+    user_tasks = list(
+    tasks_collection.find({'username': username})
+    .sort([('completed', 1), ('created_at', 1)]))
 
-    # Check if user already exists
-    users_collection = db['users']
-    existing_user = users_collection.find_one({'username': username})
-    if existing_user:
-        return "Username already exists", 409
+    # Render the task page with the username and their tasks
+    return render_template('tasks.html', username=username, tasks=user_tasks)
 
-    # Hash password and insert new user
-    hashed_password = generate_password_hash(password)
-    users_collection.insert_one({
-        'username': username,
-        'password': hashed_password
+# --- Route for displaying the task creation form ---
+@app.route('/add_task', methods=['GET'])
+def show_add_task_form():
+    if 'username' not in session:
+        return "You must be logged in to add a task.", 401
+    return render_template('add_task.html')
+
+# --- Route for handling the task submission ---
+@app.route('/add_task', methods=['POST'])
+def add_task():
+    if 'username' not in session:
+        return "You must be logged in to add a task.", 401
+
+    title = request.form.get('title')
+    description = request.form.get('description')
+    priority = request.form.get('priority') == 'on'
+
+    if not title:
+        return "Title is required.", 400
+
+    tasks_collection = db['tasks']
+    tasks_collection.insert_one({
+    'username': session['username'],
+    'title': title,
+    'description': description,
+    'completed': False,
+    'priority': priority,
+    'created_at': datetime.utcnow()
     })
 
-    return "User registered successfully!<br><a href='/register_form'>Go back</a>", 201
+    # Redirect to task list after successful addition
+    return redirect('/tasks')
+
+# --- Route for deleting a task by its ID ---
+@app.route('/delete_task/<task_id>', methods=['POST'])
+def delete_task(task_id):
+    # Make sure the user is logged in
+    if 'username' not in session:
+        return "You must be logged in to delete a task.", 401
+
+    tasks_collection = db['tasks']
+    
+    # Delete the task only if it belongs to the logged-in user
+    tasks_collection.delete_one({
+        '_id': ObjectId(task_id),
+        'username': session['username']
+    })
+
+    # Redirect back to the task list
+    return redirect('/tasks')
+
+# --- Route for showing the edit form for a specific task ---
+@app.route('/edit_task/<task_id>', methods=['GET'])
+def show_edit_task_form(task_id):
+    if 'username' not in session:
+        return "You must be logged in to edit a task.", 401
+
+    tasks_collection = db['tasks']
+    task = tasks_collection.find_one({
+        '_id': ObjectId(task_id),
+        'username': session['username']
+    })
+
+    if not task:
+        return "Task not found or access denied.", 404
+
+    return render_template('edit_task.html', task=task)
+
+# --- Route for handling the task update ---
+@app.route('/edit_task/<task_id>', methods=['POST'])
+def update_task(task_id):
+    if 'username' not in session:
+        return "You must be logged in to update a task.", 401
+
+    title = request.form.get('title')
+    description = request.form.get('description')
+    completed = request.form.get('completed') == 'on'
+    priority = request.form.get('priority') == 'on'
+
+    if not title:
+        return "Title is required.", 400
+
+    tasks_collection = db['tasks']
+    result = tasks_collection.update_one(
+        {'_id': ObjectId(task_id), 'username': session['username']},
+        {'$set': {
+            'title': title,
+            'description': description,
+            'completed': completed,
+            'priority': priority
+        }}
+    )
+
+    if result.matched_count == 0:
+        return "Task not found or access denied.", 404
+
+    return redirect('/tasks')
+
+# --- Route for updating the "completed" status of a task ---
+@app.route('/update_task_status/<task_id>', methods=['POST'])
+def update_task_status(task_id):
+    # Make sure the user is logged in
+    if 'username' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    # Get JSON data sent from the client
+    data = request.get_json()
+    completed = data.get('completed', False)
+
+    tasks_collection = db['tasks']
+
+    # Update the "completed" field of the task if it belongs to the current user
+    tasks_collection.update_one(
+        {'_id': ObjectId(task_id), 'username': session['username']},
+        {'$set': {'completed': completed}}
+    )
+
+    # Return a success message as JSON
+    return jsonify({'message': 'Task status updated'}), 200
 
 # --- Run the app in development mode ---
 if __name__ == '__main__':

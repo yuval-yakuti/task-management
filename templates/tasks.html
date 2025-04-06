@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Your Tasks</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Welcome, {{ username }}!</h1>
+
+    <h2>Add New Task</h2>
+    <form action="/add_task" method="POST">
+        <label>Title:</label><br>
+        <input type="text" name="title" required><br><br>
+
+        <label>Description:</label><br>
+        <textarea name="description" rows="4" cols="30"></textarea><br><br>
+
+        <label>
+            <input type="checkbox" name="priority">
+            Mark as high priority 🚩
+        </label><br><br>        
+
+        <button type="submit">Add Task</button>
+    </form>
+
+    <h2>Your Tasks:</h2>
+    <ul>
+        {% for task in tasks %}
+    <li class="task-item">
+
+        {% if task.created_at %}
+        <div class="task-date">
+            Created at: {{ task.created_at.strftime('%Y-%m-%d %H:%M') }}
+        </div>
+        {% endif %}
+
+        <div class="task-left">
+            <input type="checkbox" onchange="updateStatus(this)" data-task-id="{{ task['_id'] }}" {% if task.get('completed') %}checked{% endif %}>
+            <span class="task-text {% if task.get('completed') %}completed{% endif %}">
+                <strong>{{ task['title'] }}</strong>
+                {% if task.get('priority') %}
+                    <span style="color: red;">🚩</span>
+                {% endif %}
+                 - {{ task['description'] }}
+                 
+            </span>
+        </div>
+
+        <div class="task-actions">
+            <form action="/edit_task/{{ task['_id'] }}" method="GET">
+                <button type="submit">Edit</button>
+            </form>
+            <form action="/delete_task/{{ task['_id'] }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this task?');">
+                <button type="submit">Delete</button>
+            </form>
+        </div>        
+    </li>
+    {% else %}
+    <li>No tasks yet.</li>
+    {% endfor %}
+    </ul>
+        
+    <br><a href="/logout">Logout</a>
+    <script>
+        function updateStatus(checkbox) {
+            const taskId = checkbox.getAttribute('data-task-id');
+            const completed = checkbox.checked;
+        
+            // Toggle the visual strikethrough on the task text
+            const text = checkbox.nextElementSibling;
+            if (completed) {
+                text.classList.add('completed');
+            } else {
+                text.classList.remove('completed');
+            }
+        
+            // Send the update to the backend using fetch
+            fetch(`/update_task_status/${taskId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ completed: completed })
+            }).then(response => {
+                if (!response.ok) {
+                    alert("Failed to update task status.");
+                }
+            });
+        }
+        </script>        
+</body>
+</html>

@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <h1>Login</h1>
@@ -11,9 +12,20 @@
         <input type="text" name="username" />
         <br /><br />
         <label>Password:</label>
-        <input type="password" name="password" />
+        <input type="password" id="password" name="password" required>
+        <input type="checkbox" onclick="togglePassword()"> Show Password
         <br /><br />
         <button type="submit">Login</button>
     </form>
+    <script>
+        function togglePassword() {
+          var x = document.getElementById("password");
+          if (x.type === "password") {
+            x.type = "text";
+          } else {
+            x.type = "password";
+          }
+        }
+        </script>        
 </body>
 </html>
