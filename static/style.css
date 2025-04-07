@@ -1,3 +1,54 @@
+/* --- Login Page Styles --- */
+.login-container {
+    max-width: 350px;
+    margin: 80px auto;
+    padding: 40px;
+    background-color: #ffffff;
+    border: 1px solid #e6e6e6;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    font-family: 'Arial', sans-serif;
+}
+
+.login-container h2 {
+    color: #1DB954;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.login-container input[type="text"],
+.login-container input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.login-container button {
+    width: 100%;
+    padding: 10px;
+    background-color: #1DB954;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.login-container button:hover {
+    background-color: #169c48;
+}
+
+.login-footer {
+    margin-top: 20px;
+    color: #aaa;
+    font-size: 12px;
+}
+
+
+
 body {
     font-family: Arial, sans-serif;
     margin: 30px;
@@ -110,5 +161,48 @@ li {
     margin-bottom: 4px;
 }
 
+.new-task-btn {
+    display: inline-block;
+    background-color: #1DB954;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    margin-bottom: 20px;
+}
+.new-task-btn:hover {
+    background-color: #17a94b;
+}
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
 
+.form-page {
+    background-color: #f5f7f5;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.form-container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    max-width: 400px;
+    width: 100%;
+    text-align: left;
+}
+
+.form-container h2 {
+    color: #1DB954;
+    margin-bottom: 20px;
+}
 

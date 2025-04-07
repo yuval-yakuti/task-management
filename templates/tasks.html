@@ -8,36 +8,11 @@
 <body>
     <h1>Welcome, {{ username }}!</h1>
 
-    <h2>Add New Task</h2>
-    <form action="/add_task" method="POST">
-        <label>Title:</label><br>
-        <input type="text" name="title" required><br><br>
-
-        <label>Description:</label><br>
-        <textarea name="description" rows="4" cols="30"></textarea><br><br>
-
-        <label for="estimated_time">Estimated Time (minutes):</label><br>
-        <input type="number" id="estimated_time" name="estimated_time" min="1" placeholder="e.g. 30"><br><br>
-
-        <label for="category">Category:</label><br>
-        <select id="category" name="category">
-            <option value="">-- Select Category --</option>
-            <option value="Work">Work</option>
-            <option value="Study">Study</option>
-            <option value="Personal">Personal</option>
-            <option value="Other">Other</option>
-        </select><br><br>
-
-        <label>
-            <input type="checkbox" name="priority">
-            Mark as high priority 🚩
-        </label><br><br>  
-          
-
-        <button type="submit">Add Task</button>
-    </form>
-
-    <h2>Your Tasks:</h2>
+    <div class="task-header">
+        <h2>Your Tasks:</h2>
+        <a href="/add_task" class="new-task-btn">+ Create New Task</a>
+    </div>
+    
     <!-- Category Filter -->
      <form method="get" action="/tasks">
         <label for="category">Filter by Category:</label>

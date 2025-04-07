@@ -1,31 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <title>Login - Voltify</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
 </head>
-<body>
-    <h1>Login</h1>
-    <form action="/login_form" method="POST">
-        <label>Username:</label>
-        <input type="text" name="username" />
-        <br /><br />
-        <label>Password:</label>
-        <input type="password" id="password" name="password" required>
-        <input type="checkbox" onclick="togglePassword()"> Show Password
-        <br /><br />
-        <button type="submit">Login</button>
-    </form>
-    <script>
-        function togglePassword() {
-          var x = document.getElementById("password");
-          if (x.type === "password") {
-            x.type = "text";
-          } else {
-            x.type = "password";
-          }
-        }
-        </script>        
+<body class="login-page">
+    <div class="login-container">
+        <h2>Log into Voltify</h2>
+        <form method="POST" action="/login_form">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit" class="login-btn">Log in</button>
+        </form>
+        <a href="#" class="forgot-password">Forgot password?</a>
+        <form action="/register_form" method="GET">
+            <button type="submit" class="signup-btn">Create new account</button>
+        </form>
+        <footer>© Voltify</footer>
+    </div>
 </body>
 </html>

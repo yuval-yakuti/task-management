@@ -27,7 +27,7 @@ db = client.get_default_database()  # Database name comes from the URI
 # --- Homepage route: displays options to login or register ---
 @app.route('/')
 def home():
-    return render_template('auth_options.html')
+    return redirect('/login_form')
 
 # --- User registration route using JSON ---
 @app.route('/register', methods=['POST'])

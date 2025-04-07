@@ -1,39 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Add Task</title>
+    <meta charset="UTF-8">
+    <title>Add New Task - Voltify</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-    <h2>Add a New Task</h2>
-    <form method="POST" action="/add_task">
-        <label for="title">Title:</label><br>
-        <input type="text" id="title" name="title" required><br><br>
+<body class="form-page">
 
-        <label for="description">Description:</label><br>
-        <textarea id="description" name="description" rows="4" cols="30"></textarea><br><br>
+    <div class="form-container">
+        <h2>Add a New Task</h2>
+        <form method="POST" action="/add_task">
+            <label for="title">Title:</label><br>
+            <input type="text" id="title" name="title" required><br><br>
 
-        <label for="estimated_time">Estimated Time (minutes):</label><br>
-        <input type="number" id="estimated_time" name="estimated_time" min="1" placeholder="e.g. 30"><br><br>
+            <label for="description">Description:</label><br>
+            <textarea id="description" name="description" rows="4" cols="30"></textarea><br><br>
 
-        <label for="category">Category:</label><br>
-        <select id="category" name="category">
-            <option value="">-- Select Category --</option>
-            <option value="Work">Work</option>
-            <option value="Study">Study</option>
-            <option value="Personal">Personal</option>
-            <option value="Other">Other</option>
-        </select><br><br>
+            <label for="estimated_time">Estimated Time (minutes):</label><br>
+            <input type="number" id="estimated_time" name="estimated_time" min="1" placeholder="e.g. 30"><br><br>
 
-        <label>
-            <input type="checkbox" name="priority">
-            Mark as high priority 🚩
-        </label><br><br>
+            <label for="category">Category:</label><br>
+            <select id="category" name="category">
+                <option value="">-- Select Category --</option>
+                <option value="Work">Work</option>
+                <option value="Study">Study</option>
+                <option value="Personal">Personal</option>
+                <option value="Other">Other</option>
+            </select><br><br>
 
-        <button type="submit">Add Task</button>
+            <label>
+                <input type="checkbox" name="priority">
+                Mark as high priority 🚩
+            </label><br><br>
 
-    </form>
-    <br>
-    <a href="/tasks">Back to Tasks</a>
+            <button type="submit" class="green-btn">Add Task</button>
+        </form>
+
+        <br>
+        <a href="/tasks" class="back-link">← Back to Tasks</a>
+    </div>
+
 </body>
 </html>
