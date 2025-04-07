@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AI Suggestion</title>
+</head>
+<body>
+    <h2>🤖 AI Suggestion for: {{ task['title'] }}</h2>
+    <p>{{ ai_description }}</p>
+
+    <form action="/apply_ai_suggestion/{{ task['_id'] }}" method="POST" enctype="application/x-www-form-urlencoded">
+        <input type="hidden" name="ai_description" value="{{ ai_description }}">
+        <button type="submit">✅ Use this suggestion</button>
+    </form> 
+    
+    <!-- 🔁 Refresh button to regenerate suggestion -->
+<form action="/ask_ai/{{ task['_id'] }}" method="GET">
+    <button type="submit">🔁 New suggestion</button>
+</form>
+
+    <p><a href="/tasks">🔙 Back to tasks</a></p>
+</body>
+</html>

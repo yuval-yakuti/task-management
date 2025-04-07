@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from ai_helper import generate_task_description 
+from telegram_helper import send_task_to_telegram
 
 # --- Load environment variables from .env file ---
 load_dotenv()
@@ -178,6 +180,8 @@ def add_task():
     title = request.form.get('title')
     description = request.form.get('description')
     priority = request.form.get('priority') == 'on'
+    category = request.form.get('category')  # New field from form
+
 
     if not title:
         return "Title is required.", 400
@@ -189,8 +193,14 @@ def add_task():
     'description': description,
     'completed': False,
     'priority': priority,
+    'category': category,
     'created_at': datetime.utcnow()
     })
+    
+    print("✅ Inserted task:")
+    print(tasks_collection.find_one({'title': title, 'username': session['username']}))
+
+    send_task_to_telegram(title, description)
 
     # Redirect to task list after successful addition
     return redirect('/tasks')
@@ -281,6 +291,89 @@ def update_task_status(task_id):
 
     # Return a success message as JSON
     return jsonify({'message': 'Task status updated'}), 200
+
+# --- Route to send a task to Telegram ---
+@app.route('/send_to_telegram/<task_id>', methods=['POST'])
+def send_to_telegram(task_id):
+    # Ensure the user is logged in
+    if 'username' not in session:
+        return "Unauthorized", 401
+
+    tasks_collection = db['tasks']
+    
+    # Find the task that belongs to the current user
+    task = tasks_collection.find_one({
+        '_id': ObjectId(task_id),
+        'username': session['username']
+    })
+
+    if not task:
+        return "Task not found or access denied", 404
+
+    # Extract task details
+    title = task.get('title', 'Untitled')
+    description = task.get('description', '')
+
+    # Import and use the Telegram helper to send message
+    from telegram_helper import send_task_to_telegram
+    send_task_to_telegram(title, description)
+
+    return redirect('/tasks')
+
+# --- Route for handling AI suggestion based on a specific task ---
+@app.route('/ask_ai/<task_id>', methods=['GET', 'POST'])
+def ask_ai(task_id):
+    # Check if the user is logged in
+    if 'username' not in session:
+        return "Unauthorized", 401
+
+    tasks_collection = db['tasks']
+
+    # Look up the task by ID and ensure it belongs to the logged-in user
+    task = tasks_collection.find_one({
+        '_id': ObjectId(task_id),
+        'username': session['username']
+    })
+
+    # If task not found or doesn't belong to user
+    if not task:
+        return "Task not found or access denied", 404
+
+    # Get the task title to send to GPT
+    title = task.get('title', 'Untitled')
+
+    # Use OpenAI to generate a helpful description based on the title
+    suggestion = generate_task_description(title)
+
+    # Show the AI's response in a simple page
+    return render_template("ask_ai.html", task=task, ai_description=suggestion)
+
+# --- Route to apply the AI suggestion to the task description ---
+@app.route('/apply_ai_suggestion/<task_id>', methods=['POST'])
+def apply_ai_suggestion(task_id):
+    # Ensure the user is logged in
+    if 'username' not in session:
+        return "Unauthorized", 401
+
+    tasks_collection = db['tasks']
+
+    # Get the suggested description from the submitted form
+    new_description = request.form.get('ai_description')
+
+    if not new_description:
+        return "Missing suggestion", 400
+
+    # Update the task's description in the database
+    result = tasks_collection.update_one(
+        {'_id': ObjectId(task_id), 'username': session['username']},
+        {'$set': {'description': new_description}}
+    )
+
+    if result.modified_count == 0:
+        return "Update failed or not allowed", 400
+
+    # Redirect the user back to the tasks page
+    return redirect('/tasks')
 
 # --- Run the app in development mode ---
 if __name__ == '__main__':
