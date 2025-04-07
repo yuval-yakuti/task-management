@@ -1,12 +1,13 @@
 # --- Import required libraries ---
 from flask import Flask, request, jsonify, render_template, session, redirect
 import os
+import weekly_summary  
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from ai_helper import generate_task_description 
+from ai_helper import generate_task_description, analyze_task_description
 from telegram_helper import send_task_to_telegram
 
 # --- Load environment variables from .env file ---
@@ -154,15 +155,22 @@ def show_tasks():
         return "You must be logged in to view your tasks.<br><a href='/login_form'>Login</a>", 401
 
     username = session['username']
-    tasks_collection = db['tasks']
-    
-    # Fetch only tasks that belong to the current user
-    user_tasks = list(
-    tasks_collection.find({'username': username})
-    .sort([('completed', 1), ('created_at', 1)]))
+    category_filter = request.args.get('category')  # Get filter from query string
 
-    # Render the task page with the username and their tasks
-    return render_template('tasks.html', username=username, tasks=user_tasks)
+    # Build the query
+    query = {'username': username}
+    if category_filter:
+        query['category'] = category_filter
+
+    # Fetch filtered tasks from DB
+    tasks_collection = db['tasks']
+    user_tasks = list(tasks_collection.find(query).sort([
+        ('completed', 1),
+        ('created_at', 1)
+    ]))
+
+    # Pass selected category to the template for highlighting
+    return render_template('tasks.html', username=username, tasks=user_tasks, selected_category=category_filter)
 
 # --- Route for displaying the task creation form ---
 @app.route('/add_task', methods=['GET'])
@@ -181,10 +189,30 @@ def add_task():
     description = request.form.get('description')
     priority = request.form.get('priority') == 'on'
     category = request.form.get('category')  # New field from form
-
+    estimated_time = request.form.get('estimated_time')
 
     if not title:
         return "Title is required.", 400
+    
+    # If no category selected, ask AI to analyze the task
+    if not category:
+        category, estimated_time = analyze_task_description(description or title)
+        print("🧠 AI Suggestion:")
+        print("Category:", category)
+        print("Estimated Time:", estimated_time)
+    
+    else:
+        # Otherwise, only estimated_time from AI if needed
+         _, estimated_time = analyze_task_description(description or title)
+         print("📏 AI Estimated Time:", estimated_time)
+    
+    print("🧠 Task about to be saved:")
+    print({
+        'title': title,
+        'description': description,
+        'estimated_time': estimated_time,
+        'category': category
+    })
 
     tasks_collection = db['tasks']
     tasks_collection.insert_one({
@@ -194,12 +222,10 @@ def add_task():
     'completed': False,
     'priority': priority,
     'category': category,
+    'estimated_time': estimated_time,
     'created_at': datetime.utcnow()
     })
     
-    print("✅ Inserted task:")
-    print(tasks_collection.find_one({'title': title, 'username': session['username']}))
-
     send_task_to_telegram(title, description)
 
     # Redirect to task list after successful addition
@@ -250,6 +276,13 @@ def update_task(task_id):
     description = request.form.get('description')
     completed = request.form.get('completed') == 'on'
     priority = request.form.get('priority') == 'on'
+    category = request.form.get('category')
+    estimated_time = request.form.get('estimated_time')
+
+    if estimated_time:
+        estimated_time = int(estimated_time)
+    else:
+        estimated_time = None
 
     if not title:
         return "Title is required.", 400
@@ -261,7 +294,9 @@ def update_task(task_id):
             'title': title,
             'description': description,
             'completed': completed,
-            'priority': priority
+            'priority': priority,
+            'estimated_time': estimated_time,
+            'category': category
         }}
     )
 
@@ -282,12 +317,22 @@ def update_task_status(task_id):
     completed = data.get('completed', False)
 
     tasks_collection = db['tasks']
+    task = tasks_collection.find_one({'_id': ObjectId(task_id), 'username': session['username']})
+
+    if not task:
+        return jsonify({'error': 'Task not found'}), 404
 
     # Update the "completed" field of the task if it belongs to the current user
     tasks_collection.update_one(
         {'_id': ObjectId(task_id), 'username': session['username']},
         {'$set': {'completed': completed}}
     )
+    
+    # 🔔 Send Telegram notification if task is marked as completed
+    if completed:
+        from telegram_helper import bot, chat_id
+        message = f"✅ *Task Completed!*\n\n*Title:* {task['title']}\n*Description:* {task.get('description', '')}"
+        bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
 
     # Return a success message as JSON
     return jsonify({'message': 'Task status updated'}), 200
@@ -377,4 +422,4 @@ def apply_ai_suggestion(task_id):
 
 # --- Run the app in development mode ---
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=50001)

@@ -16,6 +16,9 @@
         <label>Description:</label><br>
         <textarea name="description" rows="4" cols="30"></textarea><br><br>
 
+        <label for="estimated_time">Estimated Time (minutes):</label><br>
+        <input type="number" id="estimated_time" name="estimated_time" min="1" placeholder="e.g. 30"><br><br>
+
         <label for="category">Category:</label><br>
         <select id="category" name="category">
             <option value="">-- Select Category --</option>
@@ -35,6 +38,19 @@
     </form>
 
     <h2>Your Tasks:</h2>
+    <!-- Category Filter -->
+     <form method="get" action="/tasks">
+        <label for="category">Filter by Category:</label>
+        <select id="category" name="category" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="Work" {% if selected_category == 'Work' %}selected{% endif %}>Work</option>
+            <option value="Study" {% if selected_category == 'Study' %}selected{% endif %}>Study</option>
+            <option value="Personal" {% if selected_category == 'Personal' %}selected{% endif %}>Personal</option>
+            <option value="Other" {% if selected_category == 'Other' %}selected{% endif %}>Other</option>
+        </select>
+    </form>
+    <br>
+
     <ul>
         {% for task in tasks %}
     <li class="task-item">
@@ -58,7 +74,15 @@
                 {% if task.get('priority') %}
                     <span style="color: red;">🚩</span>
                 {% endif %}
-                 - {{ task['description'] }}  
+                - {{ task['description'] }}
+
+                {% if task.get('category_suggestion') %}
+                    <br><strong>🧠 Suggested Category:</strong> {{ task['category_suggestion'] }}
+                {% endif %}
+                
+                {% if task.get('estimated_time') %}
+                    <br><strong>⏱ Estimated Time:</strong> {{ task['estimated_time'] }} minutes
+                {% endif %}
             </span>
         </div>
 

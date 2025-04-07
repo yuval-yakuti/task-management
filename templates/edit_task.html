@@ -6,25 +6,38 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Edit Task</h1>
-    <form action="/edit_task/{{ task['_id'] }}" method="POST">
-        <label>Title:</label><br>
-        <input type="text" name="title" value="{{ task['title'] }}" required><br><br>
+    <h2>Edit Task</h2>
+    <form method="POST" action="/edit_task/{{ task['_id'] }}">
+        <label for="title">Title:</label><br>
+        <input type="text" id="title" name="title" value="{{ task['title'] }}" required><br><br>
 
-        <label>Description:</label><br>
-        <textarea name="description" rows="4" cols="30">{{ task['description'] }}</textarea><br><br>
+        <label for="description">Description:</label><br>
+        <textarea id="description" name="description" rows="4" cols="30">{{ task['description'] }}</textarea><br><br>
+
+        <label for="estimated_time">Estimated Time (minutes):</label><br>
+        <input type="number" id="estimated_time" name="estimated_time" min="1" 
+       value="{{ task.estimated_time or '' }}"><br><br>
+
+        <label for="category">Category:</label><br>
+        <select id="category" name="category">
+            <option value="">-- Select Category --</option>
+            <option value="Work" {% if task['category'] == 'Work' %}selected{% endif %}>Work</option>
+            <option value="Study" {% if task['category'] == 'Study' %}selected{% endif %}>Study</option>
+            <option value="Personal" {% if task['category'] == 'Personal' %}selected{% endif %}>Personal</option>
+            <option value="Other" {% if task['category'] == 'Other' %}selected{% endif %}>Other</option>
+        </select><br><br>
 
         <label>
-            <input type="checkbox" name="completed" {% if task.get('completed') %}checked{% endif %}>
-            Mark as completed
+            <input type="checkbox" name="priority" {% if task['priority'] %}checked{% endif %}>
+            Mark as high priority 🚩
         </label><br><br>
 
         <label>
-            <input type="checkbox" name="priority" {% if task.get('priority') %}checked{% endif %}>
-            Mark as high priority 🔴
-        </label><br><br>        
+            <input type="checkbox" name="completed" {% if task['completed'] %}checked{% endif %}>
+            Completed
+        </label><br><br>
 
-        <button type="submit">Update Task</button>
+        <button type="submit">Save Changes</button>
     </form>
 
     <br><a href="/tasks">Back to Tasks</a>
