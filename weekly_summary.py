@@ -1,10 +1,11 @@
 import os
+import pytz
 from pymongo import MongoClient
 from telegram import Bot
 from dotenv import load_dotenv
 from datetime import datetime
 from openai import OpenAI
-from apscheduler.schedulers.background import BackgroundScheduler  # ← זה כאן!
+from apscheduler.schedulers.background import BackgroundScheduler 
 
 # Load environment variables
 load_dotenv()
@@ -54,7 +55,7 @@ def send_weekly_summary():
     message = f"🧠 *Weekly Smart Summary:*\n\n{summary}"
     bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
 
-# Schedule the summary every 30 seconds (for testing)
+# Schedule the summary every week (for testing)
 scheduler = BackgroundScheduler()
-scheduler.add_job(send_weekly_summary, 'cron', day_of_week='sun', hour=8, minute=0)
-scheduler.start()
+scheduler.add_job(send_weekly_summary,'cron',day_of_week='sun',hour=8,minute=0,
+    timezone=pytz.timezone("Asia/Jerusalem"))
