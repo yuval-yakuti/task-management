@@ -382,6 +382,8 @@ def send_to_telegram(task_id):
 
     # Import and use the Telegram helper to send message
     from telegram_helper import send_task_to_telegram
+    send_task_to_telegram(title, description)
+    
     try:
         send_task_to_telegram(title, description)
         print("Task sent to Telegram successfully!")
