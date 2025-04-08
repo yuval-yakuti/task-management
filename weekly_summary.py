@@ -1,17 +1,16 @@
 import os
-import pytz
 from pymongo import MongoClient
 from telegram import Bot
 from dotenv import load_dotenv
 from datetime import datetime
-from openai import OpenAI
+import openai
 from apscheduler.schedulers.background import BackgroundScheduler 
 
 # Load environment variables
 load_dotenv()
 
 # Set up OpenAI
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Set up Telegram
 bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -25,9 +24,7 @@ tasks_collection = db['tasks']
 
 def generate_weekly_summary():
     # Step 1: Fetch all incomplete tasks from the DB
-    tasks = list(tasks_collection.find({
-        'completed': False
-    }))
+    tasks = list(tasks_collection.find({'completed': False}))
 
     if not tasks:
         return "🎉 You have no open tasks this week! Great job!"
@@ -38,26 +35,31 @@ def generate_weekly_summary():
         prompt += f"- {task.get('title', '')}: {task.get('description', '')}\n"
 
     # Step 3: Ask OpenAI to summarize
-    response = openai_client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant who creates smart weekly summaries for open tasks."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.7
-    )
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant who creates smart weekly summaries for open tasks."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
+        )
 
-    summary = response.choices[0].message.content.strip()
-    return summary
+        summary = response.choices[0].message.content.strip()
+        return summary
+    except Exception as e:
+        print(f"Error in OpenAI API call: {e}")
+        return "Error generating weekly summary."
 
 def send_weekly_summary():
     summary = generate_weekly_summary()
     message = f"🧠 *Weekly Smart Summary:*\n\n{summary}"
-    bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
+    try:
+        bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
+    except Exception as e:
+        print(f"Error sending message to Telegram: {e}")
 
 # Schedule the summary every week (for testing)
 scheduler = BackgroundScheduler()
-scheduler.add_job(send_weekly_summary,'cron',day_of_week='sun',hour=8,minute=0,
-    timezone=pytz.timezone("Asia/Jerusalem"))
-
+scheduler.add_job(send_weekly_summary, 'cron', day_of_week='sun', hour=8, minute=0)
 scheduler.start()
