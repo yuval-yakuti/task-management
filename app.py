@@ -377,11 +377,20 @@ def send_to_telegram(task_id):
     title = task.get('title', 'Untitled')
     description = task.get('description', '')
 
+    # Debugging: print the task details
+    print(f"Sending Task to Telegram: Title: {title}, Description: {description}")
+
     # Import and use the Telegram helper to send message
     from telegram_helper import send_task_to_telegram
-    send_task_to_telegram(title, description)
+    try:
+        send_task_to_telegram(title, description)
+        print("Task sent to Telegram successfully!")
+    except Exception as e:
+        print(f"Error sending task to Telegram: {e}")
+        return f"Error sending task to Telegram: {e}", 500
 
     return redirect('/tasks')
+
 
 # --- Route for handling AI suggestion based on a specific task ---
 @app.route('/ask_ai/<task_id>', methods=['GET', 'POST'])
