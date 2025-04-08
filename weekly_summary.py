@@ -1,5 +1,5 @@
 import os
-import pymongo
+from pymongo import MongoClient
 from telegram import Bot
 from dotenv import load_dotenv
 from datetime import datetime
@@ -18,7 +18,7 @@ chat_id = os.getenv("TELEGRAM_CHAT_ID")
 bot = Bot(token=bot_token)
 
 # Set up MongoDB
-mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
+mongo_client = MongoClient(os.getenv("MONGO_URI"))
 db = mongo_client["voltify_db"]
 tasks_collection = db['tasks']
 
