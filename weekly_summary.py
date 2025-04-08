@@ -59,3 +59,5 @@ def send_weekly_summary():
 scheduler = BackgroundScheduler()
 scheduler.add_job(send_weekly_summary,'cron',day_of_week='sun',hour=8,minute=0,
     timezone=pytz.timezone("Asia/Jerusalem"))
+
+scheduler.start()
