@@ -27,7 +27,7 @@ app.secret_key = os.getenv("SECRET_KEY", "dev_key_for_now")
 
 # --- Connect to MongoDB using URI from .env ---
 mongo_uri = os.getenv("MONGO_URI")
-mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
+mongo_client = MongoClient(os.getenv("MONGO_URI"))
 db = mongo_client["voltify_db"]
 
 # --- Homepage route: displays options to login or register ---
