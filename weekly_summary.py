@@ -19,7 +19,7 @@ bot = Bot(token=bot_token)
 
 # Set up MongoDB
 mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
-db = mongo_client.get_database()
+db = mongo_client["voltify_db"]
 tasks_collection = db['tasks']
 
 def generate_weekly_summary():

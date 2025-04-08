@@ -1,6 +1,7 @@
 # --- Import required libraries ---
 from flask import Flask, request, jsonify, render_template, session, redirect
 import os
+import re
 import weekly_summary  
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
@@ -9,20 +10,25 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from ai_helper import generate_task_description, analyze_task_description
 from telegram_helper import send_task_to_telegram
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_cors import CORS
 
 # --- Load environment variables from .env file ---
 load_dotenv()
 
 # --- Initialize Flask app ---
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5000"]}})
+limiter = Limiter(get_remote_address, app=app)
 
 # --- Secret key for managing user sessions ---
 app.secret_key = os.getenv("SECRET_KEY", "dev_key_for_now")
 
 # --- Connect to MongoDB using URI from .env ---
 mongo_uri = os.getenv("MONGO_URI")
-client = MongoClient(mongo_uri)
-db = client.get_default_database()  # Database name comes from the URI
+mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
+db = mongo_client["voltify_db"]
 
 # --- Homepage route: displays options to login or register ---
 @app.route('/')
@@ -59,8 +65,9 @@ def register():
     return jsonify({'message': 'User registered successfully'}), 201
 
 # --- User login route using JSON ---
-@app.route('/login', methods=['POST'])
-def login():
+@app.route('/api/login', methods=['POST'])
+@limiter.limit("5 per minute")
+def login_api():
     # Extract data from the incoming JSON request
     data = request.get_json()
     username = data.get('username')
@@ -96,9 +103,19 @@ def process_register_form():
     username = request.form.get('username')
     password = request.form.get('password')
 
+# Check for missing or invalid input
     if not username or not password:
         return "Missing fields", 400
+    
+    if not re.match(r'^[a-zA-Z0-9_]+$', username):
+        return "Username must contain only letters, numbers, and underscores.", 400
 
+    if len(username) < 3 or len(username) > 20:
+        return "Username must be between 3 and 20 characters.", 400
+
+    if len(password) < 6 or len(password) > 32:
+        return "Password must be between 6 and 32 characters.", 400
+    
     users_collection = db['users']
     existing_user = users_collection.find_one({'username': username})
     if existing_user:
@@ -122,6 +139,7 @@ def show_login_form():
 
 # --- Route for handling login form submission ---
 @app.route('/login_form', methods=['POST'])
+@limiter.limit("5 per minute")
 def process_login_form():
     username = request.form.get('username')
     password = request.form.get('password')
@@ -185,50 +203,49 @@ def add_task():
     if 'username' not in session:
         return "You must be logged in to add a task.", 401
 
-    title = request.form.get('title')
-    description = request.form.get('description')
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
     priority = request.form.get('priority') == 'on'
-    category = request.form.get('category')  # New field from form
-    estimated_time = request.form.get('estimated_time')
+    category = request.form.get('category', '').strip()
+    estimated_time = request.form.get('estimated_time', '').strip()
 
-    if not title:
-        return "Title is required.", 400
-    
-    # If no category selected, ask AI to analyze the task
-    if not category:
-        category, estimated_time = analyze_task_description(description or title)
-        print("🧠 AI Suggestion:")
-        print("Category:", category)
-        print("Estimated Time:", estimated_time)
-    
+    # --- Input Validation ---
+    if not title or len(title) < 2:
+        return "Title must be at least 2 characters.", 400
+
+    if estimated_time:
+        try:
+            estimated_time = int(estimated_time)
+            if estimated_time <= 0:
+                return "Estimated time must be a positive number.", 400
+        except ValueError:
+            return "Estimated time must be a number.", 400
     else:
-        # Otherwise, only estimated_time from AI if needed
-         _, estimated_time = analyze_task_description(description or title)
-         print("📏 AI Estimated Time:", estimated_time)
-    
-    print("🧠 Task about to be saved:")
-    print({
-        'title': title,
-        'description': description,
-        'estimated_time': estimated_time,
-        'category': category
-    })
+        estimated_time = None
 
+    # --- AI-based Estimations if missing ---
+    if not category or not estimated_time:
+        ai_category, ai_time = analyze_task_description(description or title)
+        if not category:
+            category = ai_category
+        if not estimated_time:
+            estimated_time = int(ai_time)
+
+    # --- Save to DB ---
     tasks_collection = db['tasks']
     tasks_collection.insert_one({
-    'username': session['username'],
-    'title': title,
-    'description': description,
-    'completed': False,
-    'priority': priority,
-    'category': category,
-    'estimated_time': estimated_time,
-    'created_at': datetime.utcnow()
+        'username': session['username'],
+        'title': title,
+        'description': description,
+        'completed': False,
+        'priority': priority,
+        'category': category,
+        'estimated_time': estimated_time,
+        'created_at': datetime.utcnow()
     })
-    
+
     send_task_to_telegram(title, description)
 
-    # Redirect to task list after successful addition
     return redirect('/tasks')
 
 # --- Route for deleting a task by its ID ---
