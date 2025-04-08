@@ -6,19 +6,35 @@ It was created as part of a technical assignment and serves as the foundation fo
 
 ---
 
-## 🧠 Features (So Far)
-- Flask server with routing and debug mode
-- Cloud-based MongoDB connection
-- Environment variables managed securely with `.env`
-- Ready for future integrations (OpenAI, Telegram)
+## 🧠 Features
+✅ User registration & login with password hashing and input validation
+✅ Add, edit, delete, and mark tasks as completed
+✅ Priority tagging and category filtering
+✅ Estimated time & smart categorization using OpenAI
+✅ Weekly smart summary sent via Telegram Bot
+✅ AI-powered task description enhancement
+✅ Responsive interface styled after Instagram's login
+✅ Secure .env and production-ready structure
+
+---
+
+## 🎁 Bonus Features Implemented
+✅ AWS EC2 Deployment with working external URL
+✅ Secure .env and environment config separation
+✅ Telegram notifications on task creation & completion
+✅ Scheduled weekly summary using APScheduler + OpenAI
+✅ Password validation and form input constraints
+✅ Rate limiting with Flask-Limiter to prevent brute-force login
+✅ Clean, styled login form with mobile responsiveness
 
 ---
 
 ## 🛠️ Technologies Used
-- Python 3.8
-- Flask
-- pymongo
-- python-dotenv
+- Python 3.8, Flask, MongoDB Atlas
+- Jinja, HTML/CSS, JavaScript
+- OpenAI API, Telegram Bot API
+- python-dotenv, Flask-Limiter, APScheduler
+- AWS EC2 for live deployment
 - MongoDB Atlas (Cloud database)
 
 ---
@@ -30,49 +46,32 @@ It was created as part of a technical assignment and serves as the foundation fo
 git clone https://github.com/yuval-yakuti/task-management.git
 cd task-management
 ```
-
 ### 2. Create a virtual environment and activate it:
 ```bash
 python3 -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+source venv/bin/activate  # Windows: venv\Scripts\activate
 ```
-
 ### 3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-
 ### 4. Create a `.env` file:
+```bash
+cp .env.example .env
 ```
-MONGO_URI=your_mongo_connection_string_here
-```
-
 ### 5. Run the app:
 ```bash
 python app.py
 ```
 Visit `http://127.0.0.1:5000/` in your browser to verify.
 
----
-
-## 📌 Notes
-- The application is currently in development mode.
-- MongoDB URI is managed through environment variables and not included in the repository.
-- This README will be updated as new features are added (authentication, task logic, AI & Telegram integrations).
-
-
-## 🔑 AI Integration (OpenAI)
-This project includes a feature that uses OpenAI's GPT model to generate a short description for each task.
-
-To enable this feature:
-
-1. Go to [https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys) and create a new API key.
-2. In the root of the project, create a file named `.env` and add the following line:OPENAI_API_KEY=your-secret-api-key-here
-
-3. Save the file and restart the Flask server.
-
-⚠️ **Important:** The API key is private – never share or publish it.
-
+🔐 .env.example
+```bash
+MONGO_URI=your_mongodb_uri_here
+OPENAI_API_KEY=your_openai_key_here
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+TELEGRAM_CHAT_ID=your_telegram_chat_id_here
+```
 ---
 
 ## 🧑‍💻 Developer
