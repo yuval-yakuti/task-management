@@ -1,10 +1,11 @@
 import os
 import pymongo
+import pytz 
 from telegram import Bot
 from dotenv import load_dotenv
 from datetime import datetime
 from openai import OpenAI
-from apscheduler.schedulers.background import BackgroundScheduler  # ← זה כאן!
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # Load environment variables
 load_dotenv()
@@ -23,20 +24,14 @@ db = mongo_client.get_database()
 tasks_collection = db['tasks']
 
 def generate_weekly_summary():
-    # Step 1: Fetch all incomplete tasks from the DB
-    tasks = list(tasks_collection.find({
-        'completed': False
-    }))
-
+    tasks = list(tasks_collection.find({'completed': False}))
     if not tasks:
         return "🎉 You have no open tasks this week! Great job!"
 
-    # Step 2: Build a prompt from the open tasks
     prompt = "Create a weekly summary based on the following open tasks:\n"
     for task in tasks:
         prompt += f"- {task.get('title', '')}: {task.get('description', '')}\n"
 
-    # Step 3: Ask OpenAI to summarize
     response = openai_client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -46,15 +41,13 @@ def generate_weekly_summary():
         temperature=0.7
     )
 
-    summary = response.choices[0].message.content.strip()
-    return summary
+    return response.choices[0].message.content.strip()
 
 def send_weekly_summary():
     summary = generate_weekly_summary()
     message = f"🧠 *Weekly Smart Summary:*\n\n{summary}"
     bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
 
-# Schedule the summary every 30 seconds (for testing)
-scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler(timezone=pytz.utc)
 scheduler.add_job(send_weekly_summary, 'cron', day_of_week='sun', hour=8, minute=0)
 scheduler.start()
