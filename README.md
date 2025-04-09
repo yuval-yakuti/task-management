@@ -13,7 +13,6 @@ It was created as part of a technical assignment and serves as the foundation fo
 ✅ Estimated time & smart categorization using OpenAI
 ✅ Weekly smart summary sent via Telegram Bot
 ✅ AI-powered task description enhancement
-✅ Responsive interface styled after Instagram's login
 ✅ Secure .env and production-ready structure
 
 ---
