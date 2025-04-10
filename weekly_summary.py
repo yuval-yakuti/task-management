@@ -49,5 +49,5 @@ def send_weekly_summary():
     bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
 
 scheduler = BackgroundScheduler(timezone=pytz.utc)
-scheduler.add_job(send_weekly_summary, 'interval', seconds=30)
+scheduler.add_job(send_weekly_summary, 'cron', day_of_week='sun', hour=8, minute=0)
 scheduler.start()

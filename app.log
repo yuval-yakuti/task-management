@@ -1,0 +1,70 @@
+2025-04-10 09:50:16,527 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:50001
+ * Running on http://192.168.1.246:50001
+2025-04-10 09:50:16,527 - INFO - [33mPress CTRL+C to quit[0m
+2025-04-10 09:50:16,528 - INFO -  * Restarting with stat
+2025-04-10 09:50:17,099 - WARNING -  * Debugger is active!
+2025-04-10 09:50:17,107 - INFO -  * Debugger PIN: 188-993-893
+2025-04-10 09:50:46,309 - INFO - Running job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:50:46 UTC)" (scheduled at 2025-04-10 06:50:46.306836+00:00)
+2025-04-10 09:50:47,056 - INFO - Running job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:50:47 UTC)" (scheduled at 2025-04-10 06:50:47.051992+00:00)
+2025-04-10 09:50:49,464 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-10 09:50:49,733 - INFO - Job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:51:16 UTC)" executed successfully
+2025-04-10 09:50:49,814 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-10 09:50:50,057 - INFO - Job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:51:17 UTC)" executed successfully
+2025-04-10 09:51:16,309 - INFO - Running job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:51:46 UTC)" (scheduled at 2025-04-10 06:51:16.306836+00:00)
+2025-04-10 09:51:17,053 - INFO - Running job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:51:47 UTC)" (scheduled at 2025-04-10 06:51:17.051992+00:00)
+2025-04-10 09:51:17,824 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-10 09:51:18,017 - INFO - Job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:51:46 UTC)" executed successfully
+2025-04-10 09:51:18,391 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-10 09:51:18,479 - INFO - Job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:51:47 UTC)" executed successfully
+2025-04-10 09:51:46,308 - INFO - Running job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:52:16 UTC)" (scheduled at 2025-04-10 06:51:46.306836+00:00)
+2025-04-10 09:51:47,052 - INFO - Running job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:52:17 UTC)" (scheduled at 2025-04-10 06:51:47.051992+00:00)
+2025-04-10 09:51:47,522 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-10 09:51:47,614 - INFO - Job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:52:16 UTC)" executed successfully
+2025-04-10 09:51:49,189 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-10 09:51:49,316 - INFO - Job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:52:17 UTC)" executed successfully
+2025-04-10 09:52:16,310 - INFO - Running job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:52:46 UTC)" (scheduled at 2025-04-10 06:52:16.306836+00:00)
+2025-04-10 09:52:17,057 - INFO - Running job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:52:47 UTC)" (scheduled at 2025-04-10 06:52:17.051992+00:00)
+2025-04-10 09:52:18,652 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-10 09:52:18,750 - INFO - Job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:52:46 UTC)" executed successfully
+2025-04-10 09:52:20,153 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-10 09:52:20,251 - INFO - Job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:52:47 UTC)" executed successfully
+2025-04-10 09:57:28,778 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:50001
+ * Running on http://192.168.1.246:50001
+2025-04-10 09:57:28,778 - INFO - [33mPress CTRL+C to quit[0m
+2025-04-10 09:57:28,778 - INFO -  * Restarting with stat
+2025-04-10 09:57:29,400 - WARNING -  * Debugger is active!
+2025-04-10 09:57:29,408 - INFO -  * Debugger PIN: 188-993-893
+2025-04-10 09:57:58,569 - INFO - Running job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:57:58 UTC)" (scheduled at 2025-04-10 06:57:58.566475+00:00)
+2025-04-10 09:57:59,298 - INFO - Running job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:57:59 UTC)" (scheduled at 2025-04-10 06:57:59.292508+00:00)
+2025-04-10 09:58:01,285 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-10 09:58:01,549 - INFO - Job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:58:28 UTC)" executed successfully
+2025-04-10 09:58:01,796 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-10 09:58:02,063 - INFO - Job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:58:29 UTC)" executed successfully
+2025-04-10 09:58:28,570 - INFO - Running job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:58:58 UTC)" (scheduled at 2025-04-10 06:58:28.566475+00:00)
+2025-04-10 09:58:29,297 - INFO - Running job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:58:59 UTC)" (scheduled at 2025-04-10 06:58:29.292508+00:00)
+2025-04-10 09:58:30,262 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-10 09:58:30,406 - INFO - Job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:58:58 UTC)" executed successfully
+2025-04-10 09:58:31,382 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-10 09:58:31,551 - INFO - Job "send_weekly_summary (trigger: interval[0:00:30], next run at: 2025-04-10 06:58:59 UTC)" executed successfully
+2025-04-10 10:02:29,427 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:50001
+ * Running on http://192.168.1.246:50001
+2025-04-10 10:02:29,427 - INFO - [33mPress CTRL+C to quit[0m
+2025-04-10 10:02:29,428 - INFO -  * Restarting with stat
+2025-04-10 10:02:30,066 - WARNING -  * Debugger is active!
+2025-04-10 10:02:30,072 - INFO -  * Debugger PIN: 188-993-893
+2025-04-10 10:06:42,413 - INFO -  * Detected change in '/Users/yuvalyakuti/Desktop/Voltify/app.py', reloading
+2025-04-10 10:06:42,926 - INFO -  * Restarting with stat
+2025-04-10 10:11:30,362 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:50001
+ * Running on http://192.168.1.246:50001
+2025-04-10 10:11:30,362 - INFO - [33mPress CTRL+C to quit[0m
+2025-04-10 10:11:30,363 - INFO -  * Restarting with stat
+2025-04-10 10:11:31,008 - WARNING -  * Debugger is active!
+2025-04-10 10:11:31,016 - INFO -  * Debugger PIN: 188-993-893

@@ -1,8 +1,9 @@
 # --- Import required libraries ---
 from flask import Flask, request, jsonify, render_template, session, redirect
 import os
+import logging
 import re
-import weekly_summary  
+from weekly_summary import scheduler  
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
 from pymongo import MongoClient
@@ -16,6 +17,23 @@ from flask_cors import CORS
 
 # --- Load environment variables from .env file ---
 load_dotenv()
+
+# --- Logging Configuration ---
+# This sets up logging to record application events into a file called 'app.log'
+# Each log entry will include the timestamp, log level (INFO, WARNING, etc.), and the message
+logging.basicConfig(
+    level=logging.INFO,                  
+    format='%(asctime)s - %(levelname)s - %(message)s',  
+    filename='app.log',                   
+    filemode='a'                           # Append mode: doesn't overwrite existing logs
+)
+
+# Configure basic logging
+logging.basicConfig(
+    filename='app.log',         # The log messages will be saved in this file
+    level=logging.INFO,         
+    format='%(asctime)s - %(levelname)s - %(message)s'  
+)
 
 # --- Initialize Flask app ---
 app = Flask(__name__)
@@ -74,29 +92,25 @@ def login_api():
     username = data.get('username')
     password = data.get('password')
 
+    # Log the attempt
+    logging.info(f"Login attempt for user: {username}")
+
     # Check if username or password is missing
     if not username or not password:
+        logging.warning(f"Missing login fields. Username: {username}")
         return jsonify({'error': 'Missing username or password'}), 400
 
-    # Access the users collection in the database
     users_collection = db['users']
-
-    # Find user by username
     user = users_collection.find_one({'username': username})
-    if not user:
+
+    # If user not found or password incorrect
+    if not user or not check_password_hash(user['password'], password):
+        logging.warning(f"Failed login for user: {username}")
         return jsonify({'error': 'Invalid username or password'}), 401
 
-    # Verify the password against the stored hash
-    if not check_password_hash(user['password'], password):
-        return jsonify({'error': 'Invalid username or password'}), 401
-
-    # If everything matches, login is successful
+    # If login is successful
+    logging.info(f"Successful login for user: {username}")
     return jsonify({'message': 'Logged in successfully'}), 200
-
-# --- Route for showing the registration form (HTML) ---
-@app.route('/register_form', methods=['GET'])
-def show_register_form():
-    return render_template('register_form.html')
 
 # --- Route for handling registration form submission ---
 @app.route('/register_form', methods=['POST'])
@@ -104,22 +118,29 @@ def process_register_form():
     username = request.form.get('username')
     password = request.form.get('password')
 
-# Check for missing or invalid input
+    logging.info(f"Registration attempt for username: {username}")
+
+    # Check for missing or invalid input
     if not username or not password:
+        logging.warning("Registration failed: Missing fields.")
         return "Missing fields", 400
-    
+
     if not re.match(r'^[a-zA-Z0-9_]+$', username):
+        logging.warning(f"Registration failed: Invalid username format - {username}")
         return "Username must contain only letters, numbers, and underscores.", 400
 
     if len(username) < 3 or len(username) > 20:
+        logging.warning(f"Registration failed: Username length invalid - {username}")
         return "Username must be between 3 and 20 characters.", 400
 
     if len(password) < 6 or len(password) > 32:
+        logging.warning(f"Registration failed: Password length invalid - {username}")
         return "Password must be between 6 and 32 characters.", 400
-    
+
     users_collection = db['users']
     existing_user = users_collection.find_one({'username': username})
     if existing_user:
+        logging.warning(f"Registration failed: Username already exists - {username}")
         return "Username already exists", 409
 
     hashed_password = generate_password_hash(password)
@@ -127,6 +148,8 @@ def process_register_form():
         'username': username,
         'password': hashed_password
     })
+
+    logging.info(f"New user registered successfully: {username}")
 
     return """
         <h3>🎉 User registered successfully!</h3>
@@ -195,6 +218,7 @@ def show_tasks():
 @app.route('/add_task', methods=['GET'])
 def show_add_task_form():
     if 'username' not in session:
+        logging.warning("Unauthorized attempt to access add_task form")
         return "You must be logged in to add a task.", 401
     return render_template('add_task.html')
 
@@ -202,40 +226,46 @@ def show_add_task_form():
 @app.route('/add_task', methods=['POST'])
 def add_task():
     if 'username' not in session:
+        logging.warning("Unauthorized attempt to add a task")
         return "You must be logged in to add a task.", 401
 
+    username = session['username']
     title = request.form.get('title', '').strip()
     description = request.form.get('description', '').strip()
     priority = request.form.get('priority') == 'on'
     category = request.form.get('category', '').strip()
     estimated_time = request.form.get('estimated_time', '').strip()
 
+    logging.info(f"User '{username}' is submitting a new task: {title}")
+
     # --- Input Validation ---
     if not title or len(title) < 2:
+        logging.warning(f"Task submission by '{username}' failed: Title too short or missing")
         return "Title must be at least 2 characters.", 400
 
     if estimated_time:
         try:
             estimated_time = int(estimated_time)
             if estimated_time <= 0:
+                logging.warning(f"Task submission by '{username}' failed: Non-positive estimated time")
                 return "Estimated time must be a positive number.", 400
         except ValueError:
+            logging.warning(f"Task submission by '{username}' failed: Invalid estimated time (not a number)")
             return "Estimated time must be a number.", 400
     else:
         estimated_time = None
 
     # --- AI-based Estimations if missing ---
     if not category or not estimated_time:
+        logging.info(f"AI estimation triggered for task '{title}' by '{username}'")
         ai_category, ai_time = analyze_task_description(description or title)
         if not category:
             category = ai_category
         if not estimated_time:
             estimated_time = int(ai_time)
 
-    # --- Save to DB ---
-    tasks_collection = db['tasks']
-    tasks_collection.insert_one({
-        'username': session['username'],
+    task_data = {
+        'username': username,
         'title': title,
         'description': description,
         'completed': False,
@@ -243,9 +273,16 @@ def add_task():
         'category': category,
         'estimated_time': estimated_time,
         'created_at': datetime.utcnow()
-    })
+    }
+
+    # --- Save to DB ---
+    tasks_collection = db['tasks']
+    tasks_collection.insert_one(task_data)
+
+    logging.info(f"Task successfully added by '{username}': {title}")
 
     send_task_to_telegram(title, description)
+    logging.info(f"Telegram notification sent for task: {title}")
 
     return redirect('/tasks')
 
@@ -254,40 +291,36 @@ def add_task():
 def delete_task(task_id):
     # Make sure the user is logged in
     if 'username' not in session:
+        logging.warning("Unauthorized attempt to delete a task")
         return "You must be logged in to delete a task.", 401
 
     tasks_collection = db['tasks']
     
-    # Delete the task only if it belongs to the logged-in user
-    tasks_collection.delete_one({
-        '_id': ObjectId(task_id),
-        'username': session['username']
-    })
-
-    # Redirect back to the task list
-    return redirect('/tasks')
-
-# --- Route for showing the edit form for a specific task ---
-@app.route('/edit_task/<task_id>', methods=['GET'])
-def show_edit_task_form(task_id):
-    if 'username' not in session:
-        return "You must be logged in to edit a task.", 401
-
-    tasks_collection = db['tasks']
+    # Attempt to find the task before deleting
     task = tasks_collection.find_one({
         '_id': ObjectId(task_id),
         'username': session['username']
     })
 
     if not task:
+        logging.warning(f"Task with ID {task_id} not found or access denied for user {session['username']}")
         return "Task not found or access denied.", 404
 
-    return render_template('edit_task.html', task=task)
+    tasks_collection.delete_one({
+        '_id': ObjectId(task_id),
+        'username': session['username']
+    })
+
+    logging.info(f"Task '{task['title']}' deleted by user '{session['username']}'")
+
+    # Redirect back to the task list
+    return redirect('/tasks')
 
 # --- Route for handling the task update ---
 @app.route('/edit_task/<task_id>', methods=['POST'])
 def update_task(task_id):
     if 'username' not in session:
+        logging.warning("Unauthorized attempt to update a task")
         return "You must be logged in to update a task.", 401
 
     title = request.form.get('title')
@@ -298,11 +331,19 @@ def update_task(task_id):
     estimated_time = request.form.get('estimated_time')
 
     if estimated_time:
-        estimated_time = int(estimated_time)
+        try:
+            estimated_time = int(estimated_time)
+            if estimated_time <= 0:
+                logging.warning(f"Invalid estimated time provided by user {session['username']}")
+                return "Estimated time must be a positive number.", 400
+        except ValueError:
+            logging.warning(f"Non-numeric estimated time provided by user {session['username']}")
+            return "Estimated time must be a number.", 400
     else:
         estimated_time = None
 
     if not title:
+        logging.warning(f"User {session['username']} submitted a task without a title")
         return "Title is required.", 400
 
     tasks_collection = db['tasks']
@@ -319,8 +360,10 @@ def update_task(task_id):
     )
 
     if result.matched_count == 0:
+        logging.warning(f"Task update failed. Task ID: {task_id} not found for user {session['username']}")
         return "Task not found or access denied.", 404
 
+    logging.info(f"Task '{title}' updated by user '{session['username']}'")
     return redirect('/tasks')
 
 # --- Route for updating the "completed" status of a task ---
@@ -328,6 +371,7 @@ def update_task(task_id):
 def update_task_status(task_id):
     # Make sure the user is logged in
     if 'username' not in session:
+        logging.warning("Unauthorized attempt to update task status")
         return jsonify({'error': 'Unauthorized'}), 401
 
     # Get JSON data sent from the client
@@ -338,19 +382,27 @@ def update_task_status(task_id):
     task = tasks_collection.find_one({'_id': ObjectId(task_id), 'username': session['username']})
 
     if not task:
+        logging.warning(f"Task not found or access denied for task_id: {task_id}")
         return jsonify({'error': 'Task not found'}), 404
 
-    # Update the "completed" field of the task if it belongs to the current user
+    # Update the "completed" field of the task
     tasks_collection.update_one(
         {'_id': ObjectId(task_id), 'username': session['username']},
         {'$set': {'completed': completed}}
     )
-    
+
+    status = "completed" if completed else "not completed"
+    logging.info(f"Task '{task['title']}' marked as {status} by user '{session['username']}'")
+
     # 🔔 Send Telegram notification if task is marked as completed
     if completed:
         from telegram_helper import bot, chat_id
         message = f"✅ *Task Completed!*\n\n*Title:* {task['title']}\n*Description:* {task.get('description', '')}"
-        bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
+        try:
+            bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
+            logging.info(f"Telegram notification sent for task completion: '{task['title']}'")
+        except Exception as e:
+            logging.error(f"Failed to send Telegram message: {e}")
 
     # Return a success message as JSON
     return jsonify({'message': 'Task status updated'}), 200
@@ -383,7 +435,7 @@ def send_to_telegram(task_id):
     # Import and use the Telegram helper to send message
     from telegram_helper import send_task_to_telegram
     send_task_to_telegram(title, description)
-    
+
     try:
         send_task_to_telegram(title, description)
         print("Task sent to Telegram successfully!")
