@@ -129,13 +129,6 @@ li {
     gap: 10px; 
 }
 
-.task-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
 .task-box {
     flex: 1;
     background-color: #fff;

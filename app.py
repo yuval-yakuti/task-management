@@ -3,7 +3,6 @@ from flask import Flask, request, jsonify, render_template, session, redirect
 import os
 import logging
 import re
-from weekly_summary import scheduler  
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
 from pymongo import MongoClient
@@ -24,15 +23,8 @@ load_dotenv()
 logging.basicConfig(
     level=logging.INFO,                  
     format='%(asctime)s - %(levelname)s - %(message)s',  
-    filename='app.log',                   
+    filename='app.log',                   # The log messages will be saved in this file
     filemode='a'                           # Append mode: doesn't overwrite existing logs
-)
-
-# Configure basic logging
-logging.basicConfig(
-    filename='app.log',         # The log messages will be saved in this file
-    level=logging.INFO,         
-    format='%(asctime)s - %(levelname)s - %(message)s'  
 )
 
 # --- Initialize Flask app ---
@@ -45,7 +37,6 @@ app.secret_key = os.getenv("SECRET_KEY", "dev_key_for_now")
 
 # --- Connect to MongoDB using URI from .env ---
 mongo_uri = os.getenv("MONGO_URI")
-print("🔍 MONGO_URI =", os.getenv("MONGO_URI"))
 mongo_client = MongoClient(os.getenv("MONGO_URI"))
 db = mongo_client["voltify_db"]
 
@@ -197,9 +188,9 @@ def show_tasks():
         return "You must be logged in to view your tasks.<br><a href='/login_form'>Login</a>", 401
 
     username = session['username']
-    category_filter = request.args.get('category')  # Get filter from query string
+    category_filter = request.args.get('category')  # Get filter from query string in URL
 
-    # Build the query
+    # Build the query in the data base 
     query = {'username': username}
     if category_filter:
         query['category'] = category_filter
@@ -429,9 +420,6 @@ def send_to_telegram(task_id):
     title = task.get('title', 'Untitled')
     description = task.get('description', '')
 
-    # Debugging: print the task details
-    print(f"Sending Task to Telegram: Title: {title}, Description: {description}")
-
     # Import and use the Telegram helper to send message
     from telegram_helper import send_task_to_telegram
     send_task_to_telegram(title, description)
@@ -440,7 +428,7 @@ def send_to_telegram(task_id):
         send_task_to_telegram(title, description)
         print("Task sent to Telegram successfully!")
     except Exception as e:
-        print(f"Error sending task to Telegram: {e}")
+        logging.error(f"Error sending task to Telegram: {e}")
         return f"Error sending task to Telegram: {e}", 500
 
     return redirect('/tasks')
