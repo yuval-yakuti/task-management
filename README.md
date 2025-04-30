@@ -1,4 +1,4 @@
-# Voltify – Task Management App
+# Task Management App
 
 This project is a personal web application for task management, built using **Python Flask** and connected to **MongoDB Atlas**.
 
@@ -14,10 +14,6 @@ It was created as part of a technical assignment and serves as the foundation fo
 ✅ Weekly smart summary sent via Telegram Bot
 ✅ AI-powered task description enhancement
 ✅ Secure .env and production-ready structure
-
----
-
-## 🎁 Bonus Features Implemented
 ✅ AWS EC2 Deployment with working external URL
 ✅ Secure .env and environment config separation
 ✅ Telegram notifications on task creation & completion
